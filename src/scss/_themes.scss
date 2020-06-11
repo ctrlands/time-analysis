@@ -1,0 +1,21 @@
+@import './_base.scss';
+// $baseBckColor_light: #fcfcfc;
+// $baseColor_light: #121212;
+// $baseBckColor_dark: #323639;
+// $baseColor_dark: #f8f9fa;
+$themes: (
+  light: (
+    // 字体颜色
+    font_color: $baseColor_light,
+    // 背景颜色
+    background_color: $baseBckColor_light,
+    // 边框颜色
+  ),
+  dark: (
+    // 字体颜色
+    font_color: $baseColor_dark,
+    // 背景颜色
+    background_color: $baseBckColor_dark,
+    // 边框颜色
+  )
+)

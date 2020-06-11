@@ -1,0 +1,26 @@
+@import './_base.scss';
+
+.van-step {
+  [data-theme="dark"] & {
+    color: $baseColor_dark;
+  }
+  [data-theme="light"] & {
+    color: $baseColor_light;
+  }
+}
+.van-steps {
+  [data-theme="dark"] & {
+    background-color: $baseBckColor_dark;
+  }
+  [data-theme="light"] & {
+    background-color: $baseBckColor_light;
+  }
+}
+.van-step--horizontal .van-step__circle-container {
+  [data-theme="dark"] & {
+    background-color: $baseBckColor_dark;
+  }
+  [data-theme="light"] & {
+    background-color: $baseBckColor_light;
+  }
+}
