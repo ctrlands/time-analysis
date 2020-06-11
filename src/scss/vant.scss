@@ -8,6 +8,14 @@
     color: $baseColor_light;
   }
 }
+.van-step__line {
+  [data-theme="dark"] & {
+    background-color: $baseBckColor_light;
+  }
+  [data-theme="light"] & {
+    background-color: $baseBckColor_dark;
+  }
+}
 .van-steps {
   [data-theme="dark"] & {
     background-color: $baseBckColor_dark;
@@ -23,4 +31,15 @@
   [data-theme="light"] & {
     background-color: $baseBckColor_light;
   }
+}
+.van-cell {
+  [data-theme="dark"] & {
+    background-color: $baseBckColor_dark;
+  }
+  [data-theme="light"] & {
+    background-color: $baseBckColor_light;
+  }
+}
+.van-cell::after {
+  border-bottom: unset !important;
 }

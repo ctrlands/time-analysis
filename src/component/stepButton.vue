@@ -2,7 +2,7 @@
   <div>
     <van-row type="flex" justify="center">
       <van-col :span="parseInt(24/buttons.length)" v-for="(button, index) in buttons" :key="index">
-        <van-button round type="info" @click="btnclick(button)">{{ button.name }}</van-button>
+        <van-button round type="info" @click="btnclick(button)" :disabled="button.disabled ? button.disabled : false">{{ button.name }}</van-button>
       </van-col>
     </van-row>
   </div>
