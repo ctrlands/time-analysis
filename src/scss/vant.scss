@@ -10,10 +10,10 @@
 }
 .van-step__line {
   [data-theme="dark"] & {
-    background-color: $baseBckColor_light;
+    background-color: $baseBckColor_light_alpha50;
   }
   [data-theme="light"] & {
-    background-color: $baseBckColor_dark;
+    background-color: $baseBckColor_dark_alpha50;
   }
 }
 .van-steps {
@@ -42,4 +42,16 @@
 }
 .van-cell::after {
   border-bottom: unset !important;
+}
+
+.van-progress {
+  background-color: transparent !important;
+}
+.van-divider {
+  [data-theme="dark"] & {
+    background-color: $baseBorderColor_light_alpha50;
+  }
+  [data-theme="light"] & {
+    background-color: $baseBorderColor_dark_alpha50;
+  }
 }

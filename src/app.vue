@@ -19,6 +19,7 @@ export default {
 </script>
 
 <style lang="scss">
+@import '@/scss/reset.scss';
 @import '@/scss/vant.scss';
 @import '@/scss/_handle.scss';
 #app {

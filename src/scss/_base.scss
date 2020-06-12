@@ -2,3 +2,11 @@ $baseBckColor_light: #fcfcfc;
 $baseColor_light: #121212;
 $baseBckColor_dark: #323639;
 $baseColor_dark: #f8f9fa;
+$baseBckColor_dark_alpha50: rgba(50, 54, 57, .5);
+$baseBckColor_light_alpha50: rgba(252, 252, 252, .5);
+$baseBorderColor_dark_alpha50: rgba(50, 54, 57, .5);
+$baseBorderColor_light_alpha50: rgba(252, 252, 252, .5);
+
+.main-text {
+  font-size: 24px;
+}

@@ -25,7 +25,7 @@ export default {
   },
   methods: {
     btnclick (data) {
-      this.$emit('btnClick', data)
+      this.$emit('btn-click-evt', data)
     }
   },
 

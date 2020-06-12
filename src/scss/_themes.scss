@@ -10,6 +10,7 @@ $themes: (
     // 背景颜色
     background_color: $baseBckColor_light,
     // 边框颜色
+    border_color: $baseBorderColor_light_alpha50
   ),
   dark: (
     // 字体颜色
@@ -17,5 +18,6 @@ $themes: (
     // 背景颜色
     background_color: $baseBckColor_dark,
     // 边框颜色
+    border_color: $baseBorderColor_dark_alpha50
   )
 )
