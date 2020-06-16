@@ -1,6 +1,6 @@
 /*
  * @Author: db description
- */ 
+ */
 /** data table
  * id
  * actionId
@@ -12,14 +12,14 @@
  * endTime
  * isStep
  * currentStatus == disabled: false  true
- * 
- * 
+ *
+ *
  */
 
 /**
  * action table
- * id
- * name
- * isStep
- * stepOrder
+ * id integer primary key
+ * name varcahr(15)
+ * isStep varcahr(2)
+ * stepOrder varcahr(10)
  */

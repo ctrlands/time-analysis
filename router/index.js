@@ -11,33 +11,34 @@ import VueRouter from 'vue-router'
 // // const Index = () => import(/* webpackChunkName: 'ImportFuncDemo' */ '@/components/index')
 // // const About = () => import(/* webpackChunkName: 'ImportFuncDemo' */ '@/components/about')
 const originalPush = VueRouter.prototype.push
-VueRouter.prototype.push = function push(location) {
+VueRouter.prototype.push = function push (location) {
   return originalPush.call(this, location).catch(err => err)
 }
 
 Vue.use(VueRouter)
 
-const routes = [
+var routes = [
   {
     path: '/',
     meta: {
       title: 'Main'
     },
     name: 'Main',
-    component: () => import("@/view/main")
+    // component: () => import('@/view/main')
+    component: () => import(/* webpackChunkName: "Main" */ '@/view/main')
   },
   {
     path: '/echart',
     meta: {
-      title: 'echart',
-      keepAlive: false
+      title: 'echart'
     },
     name: 'echart',
-    component: () => import('@/component/echart')
+    // component: () => import('@/component/echart')
+    component: () => import(/* webpackChunkName: "echart" */ '@/component/echart')
   }
 ]
 
-const router = new VueRouter({
+var router = new VueRouter({
   routes
 })
 
@@ -49,4 +50,4 @@ router.beforeEach((to, from, next) => {
   next()
 })
 
-export default router;
+export default router

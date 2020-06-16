@@ -1,5 +1,4 @@
 <template>
-  <!-- 上/下/切换 -->
   <div
     class="main-wrapper"
     @touchstart.self="touchstart"
@@ -23,7 +22,7 @@
           <van-row>
             <van-col span="24">
               <van-progress
-                :percentage="list.total >= 60 ? 100 : 1.6*list.total"
+                :percentage="list.total >= 60 ? 100 : 1.6 * list.total"
                 :show-pivot="false"
               />
             </van-col>
@@ -43,13 +42,9 @@
       <step-button :buttons="onButtons" @btnClick="btnClick"></step-button>
     </div>-->
     <div class="bottom">
-      <step-button :buttons="onButtons" @btn-click-evt="btnClick"></step-button>
+      <step-button :buttons="steps" @btn-click-evt="btnClick"></step-button>
       <van-steps :active="active" active-icon="success" active-color="#38f">
-        <van-step v-for="(step, index) in onButtons" :key="index">
-          {{
-          step.name
-          }}
-        </van-step>
+        <van-step v-for="(step, index) in steps" :key="index">{{ step.name }}</van-step>
       </van-steps>
     </div>
     <side-menu :isSidePopupShow="isSidePopupShow" @popup-close="popupClose"></side-menu>
@@ -57,15 +52,16 @@
 </template>
 
 <script>
-import stepButton from "@/component/stepButton";
-import sideMenu from "@/component/sideMenu";
+import stepButton from "@/component/stepButton"
+import sideMenu from "@/component/sideMenu"
+import { openDB, executeSql, sqlBatch, sqlQuery } from "@/util/sqliteUtil"
 export default {
   name: "main-component",
   components: {
     stepButton,
     sideMenu
   },
-  data() {
+  data () {
     return {
       // 侧边菜单栏显示
       isSidePopupShow: false,
@@ -122,51 +118,102 @@ export default {
       touchEndY: 0,
       isSwipRight: false,
       db: null,
-      resultData: []
-    };
+      resultData: [],
+      steps: []
+    }
   },
-  created() {
-    document.documentElement.setAttribute("data-theme", "light");
+  created () {
+    document.documentElement.setAttribute("data-theme", "light")
   },
-  mounted() {
+  mounted () {
     this.onButtons.forEach(ele => {
-      this.$set(ele, "disabled", true);
+      this.$set(ele, "disabled", true)
       if (ele.stepOrder == 1) {
-        ele.disabled = false;
+        ele.disabled = false
       }
-    });
+    })
+    this.getStepOrders()
   },
   methods: {
-    popupClose() {
-      this.isSidePopupShow = false;
+    // 初始化db
+    initTable () {
+      openDB("timeanlysis").then(
+        data => {
+          this.db = data
+        },
+        err => {
+          // console.log(err);
+        }
+      )
+      if (this.db) {
+        // 创建表
+        const CREATE_ACTIONS_TABLE =
+          "CREATE TABLE IF NOT EXISTS actions (id integer primary key, name varchar(15), isstep varchar(1), steporder varchar(10))"
+        const CREATE_RECORDS_TABLE =
+          "CREATE TABLE IF NOT EXISTS records (id integer primary key, stepid integer, year varchar(5), month varchar(2), day varchar(2), starttime text, endtime text, odate text, timediff text)"
+        let _sqlBatch = []
+        _sqlBatch.push(CREATE_ACTIONS_TABLE, CREATE_RECORDS_TABLE)
+        sqlBatch(this.db, _sqlBatch).then(
+          data => {
+            console.log(data)
+            console.log("add table success")
+          },
+          err => {
+            console.log(err)
+          }
+        )
+      }
     },
-    touchstart(evt) {
-      this.touchStartX = evt.touches[0].clientX;
-      this.touchStartY = evt.touches[0].clientY;
+    // 获取步骤数据
+    getStepOrders () {
+      openDB("timeanlysis").then(
+        data => {
+          this.db = data
+          // const _sql = 'SELECT * FROM tabletest'
+          // sqlQuery(this.db, _sql).then(data => {
+          //   console.log('promise resolve callback')
+          //   console.log(data)
+          // }, err => {
+          //   console.log(err)
+          // })
+          // this.initSqlDefaultData()
+          this.getStepDatas()
+        },
+        err => {
+          // console.log(err);
+        }
+      )
     },
-    touchmove(evt) {
-      this.touchEndX = evt.touches[0].clientX;
-      this.touchEndY = evt.touches[0].clientY;
+    popupClose () {
+      this.isSidePopupShow = false
+    },
+    touchstart (evt) {
+      this.touchStartX = evt.touches[0].clientX
+      this.touchStartY = evt.touches[0].clientY
+    },
+    touchmove (evt) {
+      this.touchEndX = evt.touches[0].clientX
+      this.touchEndY = evt.touches[0].clientY
       if (
         this.touchEndX - this.touchStartX > 50 &&
         Math.abs(this.touchStartY - this.touchEndY) < 10
       ) {
-        this.isSwipRight = true;
+        this.isSwipRight = true
       } else {
-        this.isSwipRight = false;
+        this.isSwipRight = false
       }
     },
-    touchend(evt) {
+    touchend (evt) {
       // 向右滑动
       if (this.isSwipRight) {
-        this.isSidePopupShow = true;
+        this.isSidePopupShow = true
       } else {
-        this.isSidePopupShow = false;
+        this.isSidePopupShow = false
       }
     },
-    getLists() {
-      this.loading = false;
-      this.finished = true;
+    getLists () {
+      this.loading = false
+      this.finished = true
       // 查询数据
     },
     /**
@@ -175,131 +222,144 @@ export default {
      * @return:
      */
 
-    btnClick(data) {
+    btnClick (data) {
+      // 储存当前步骤信息, 储存前置步骤结束时间等信息
       let _this = this
-      data.disabled = true;
-      let nextStep = this.onButtons.filter(item => {
-        return item.stepOrder && item.stepOrder == data.stepOrder + 1;
-      });
-      if (nextStep.length > 0) nextStep[0].disabled = false;
-      this.active = data.stepOrder;
+      data.disabled = true
+      let nextStep = this.steps.filter(item => {
+        return item.steporder && item.steporder == data.steporder + 1
+      })
+      if (nextStep.length > 0) nextStep[0].disabled = false
+      this.active = data.steporder
       // this.onButtons[data.stepOrder].disabled = false;
-      if (data.isStep) {
-        this.uid++;
+      if (data.isstep) {
+        this.uid++
         // 存储数据至sqlite
         this.timeLists.push({
-          id: this.uid,
+          id: data.id,
           name: data.name,
-          startTime: this._moment().format("HH:mm"),
+          startTime: this._moment().format("H:m"),
           endTime: "",
           year: this._moment().format("YYYY"),
           month: this._moment().format("MM"),
           total: 0
-        });
-        if (data.stepOrder != 1) {
-          // 前置步骤结束时间 = 当前步骤的开始时间
-          this.timeLists[data.stepOrder - 2].endTime = this.timeLists[
-            data.stepOrder - 1
-          ].startTime;
-          let startTime = this._moment(
-            this.timeLists[data.stepOrder - 2].startTime,
-            "hh:mm"
-          ); // 前置步骤开始时间
-          let endTime = this._moment(
-            this.timeLists[data.stepOrder - 2].endTime,
-            "hh:mm"
-          ); // 前置步骤结束时间
-          let timeGap = endTime.diff(startTime, "minute"); //计算相差的分钟数
-          this.timeLists[data.stepOrder - 2].total = timeGap; // 前置步骤执行时间
-          // 存储数据至sqlite
+        })
+        // if (data.steporder != 1) {
+        //   // 前置步骤结束时间 = 当前步骤的开始时间
+        //   this.timeLists[data.steporder - 2].endTime = this.timeLists[
+        //     data.steporder - 1
+        //   ].startTime
+        //   let startTime = this._moment(
+        //     this.timeLists[data.steporder - 2].startTime,
+        //     "hh:mm"
+        //   ) // 前置步骤开始时间
+        //   let endTime = this._moment(
+        //     this.timeLists[data.steporder - 2].endTime,
+        //     "hh:mm"
+        //   ) // 前置步骤结束时间
+        //   let timediff = endTime.diff(startTime, "minute") //计算相差的分钟数
+        //   this.timeLists[data.stepOrder - 2].total = timediff // 前置步骤执行时间
+        //   // 存储数据至sqlite
+        //   let tmp = {
+        //     endtime: endTime,
+        //     timediff: timediff
+        //   }
+        //   const _EXECUTEQUERY = `INSERT INTO records(endtime, timediff) VALUES (?,?) WHERE stepid = ''`
+        //   let _VALUE = [tmp.endtime, tmp.timediff]
+        //   // 插入数据
+        //   executeSql(this.db, _VALUE, _EXECUTEQUERY).then(
+        //     data => {
+        //       // console.log("insert success")
+        //     },
+        //     err => {
+        //       // console.log(err)
+        //     }
+        //   )
+        // }
+
+        // 存储当前步骤数据至sqlite
+        let tmp = {
+          stepid: data.id,
+          year: this._moment().format("YYYY"),
+          month: this._moment().format("M"),
+          day: this._moment().format("D"),
+          odate: this._moment().format("YYYY-M-D-H:m"),
+          starttime: this._moment().format("H:m"),
         }
-      }
-      this.getLists();
-      // 创建本地数据
-      if (data.stepOrder == 1) {
-        // 创建数据库
-        this.db = window.sqlitePlugin.openDatabase(
-          {
-            name: "timeanlysis.db",
-            location: "default",
-            androidDatabaseProvider: "system"
-          },
-          //回调函数，可传
-          function callBack(db) {
-            db.transaction(
-              function(tx) {
-                alert("创建数据库成功");
-                // ...
-              },
-              function(err) {
-                alert("Open database ERROR: " + JSON.stringify(err));
-              }
-            );
-          }
-        );
-        // 创建tabletest表
-        this.db.transaction(function(transaction) {
-          transaction.executeSql(
-            "CREATE TABLE IF NOT EXISTS tabletest (id integer primary key, title text, desc text)",
-            [],
-            function(tx, result) {
-              alert("Table created successfully");
-            },
-            function(error) {
-              alert("Error occurred while creating the table.");
-            }
-          );
-        });
-      }
-      if (data.stepOrder == 2) {
+        const _EXECUTEQUERY = 'INSERT INTO records(stepid, year, month, day, odate, starttime) VALUES (?,?,?,?,?,?)'
+        let _VALUE = [tmp.stepid, tmp.year, tmp.month, tmp.day, tmp.odate, tmp.startTime]
         // 插入数据
-        var title = "sundaravel";
-        var desc = "phonegap freelancer";
-        this.db.transaction(function(transaction) {
-          var executeQuery =
-            "INSERT INTO tabletest (title, desc) VALUES (?, ?)";
-          transaction.executeSql(
-            executeQuery,
-            [title, desc],
-            function(tx, result) {
-              alert("Inserted suceess");
-            },
-            function(error) {
-              alert("Error occurred, insert failure");
-            }
-          );
-        });
+        executeSql(this.db, _VALUE, _EXECUTEQUERY).then(
+          data => {
+            console.log("insert success")
+          },
+          err => {
+            console.log('insert error')
+            console.log(err)
+          }
+        )
       }
-      if (data.stepOrder == 3) {
-        // 查询数据
-        this.db.transaction(function(transaction) {
-          transaction.executeSql(
-            "SELECT * FROM tabletest",
-            [],
-            function(tx, results) {
-              var len = results.rows.length, i;
-              let result = []
-              results.rows.length.forEach(ele => {
-                result.push({
-                  id: ele.id,
-                  title: ele.title,
-                  desc: ele.desc
-                })
-              })
-              _this.resultData = result
-              alert(JSON.stringify(_this.resultData))
-            },
-            null
-          );
-        });
-      }
+      this.getLists()
+    },
+    // 插入sql测试数据
+    initSqlDefaultData () {
+      const CREATE_ACTIONS_TABLE =
+        "CREATE TABLE IF NOT EXISTS actions (id integer primary key, name varchar(15), isstep varchar(1), steporder varchar(10))"
+      const CREATE_RECORDS_TABLE =
+        "CREATE TABLE IF NOT EXISTS records (id integer primary key, stepid integer, year varchar(5), month varchar(2), day varchar(2), starttime text, endtime text, odate text, timediff text)"
+      let _sqlBatch = []
+      _sqlBatch.push(CREATE_ACTIONS_TABLE, CREATE_RECORDS_TABLE)
+      console.log(_sqlBatch)
+      sqlBatch(this.db, _sqlBatch).then(
+        data => {
+          // console.log(data)
+          console.log("add table success")
+          // this.insertTestData()
+        },
+        err => {
+          console.log(err)
+        }
+      )
+    },
+    insertTestData () {
+      // let s1 = ['INSERT INTO actions(name, isstep, steporder) VALUES (?,?,?)', ['step1', '1', '1']]
+      // let s2 = ['INSERT INTO actions(name, isstep, steporder) VALUES (?,?,?)', ['step2', '1', '2']]
+      // let s3 = ['INSERT INTO actions(name, isstep, steporder) VALUES (?,?,?)', ['step3', '1', '3']]
+      // let s4 = ['INSERT INTO actions(name, isstep, steporder) VALUES (?,?,?)', ['step4', '1', '4']]
+      // let _EXECUTEQUERY = s1.concat(s2, s3, s4)
+      // // 插入数据
+      // console.log(_EXECUTEQUERY)
+      sqlBatch(this.db, [
+        [ 'INSERT INTO actions(name, isstep, steporder) VALUES (?,?,?)', ['step1', '1', '1'] ],
+        [ 'INSERT INTO actions(name, isstep, steporder) VALUES (?,?,?)', ['step2', '1', '2'] ],
+        [ 'INSERT INTO actions(name, isstep, steporder) VALUES (?,?,?)', ['step3', '1', '3'] ],
+        [ 'INSERT INTO actions(name, isstep, steporder) VALUES (?,?,?)', ['step4', '1', '4'] ]
+      ]).then(
+        data => {
+          console.log("insert success")
+        },
+        err => {
+          console.log('insert failure')
+          console.log(err)
+        }
+      )
+    },
+    getStepDatas () {
+      const _sql = 'SELECT * from actions'
+      sqlQuery(this.db, _sql).then(data => {
+        this.steps = data
+        console.log(this.steps)
+      }, err => {
+        console.log(err)
+      })
     }
   }
-};
+}
 </script>
 
 <style lang="scss">
 @import "@/scss/_handle.scss";
+
 .main-wrapper {
   width: 100%;
   height: 100%;
@@ -307,6 +367,7 @@ export default {
   @include font_color("font_color");
   @include background_color("background_color");
 }
+
 .bottom {
   position: fixed;
   bottom: 0;
@@ -314,6 +375,7 @@ export default {
   @include font_color("font_color");
   @include background_color("background_color");
 }
+
 .middle {
   position: fixed;
   bottom: 200px;
@@ -321,18 +383,23 @@ export default {
   @include font_color("font_color");
   @include background_color("background_color");
 }
+
 .list-wrapper {
   padding: 12px;
 }
+
 .col-align-left {
   text-align: left;
 }
+
 .col-align-center {
   text-align: center;
 }
+
 .col-align-right {
   text-align: right;
 }
+
 .row-wrapper .van-row {
   padding: 6px 0;
 }
