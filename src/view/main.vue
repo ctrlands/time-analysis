@@ -244,38 +244,38 @@ export default {
           month: this._moment().format("MM"),
           total: 0
         })
-        // if (data.steporder != 1) {
-        //   // 前置步骤结束时间 = 当前步骤的开始时间
-        //   this.timeLists[data.steporder - 2].endTime = this.timeLists[
-        //     data.steporder - 1
-        //   ].startTime
-        //   let startTime = this._moment(
-        //     this.timeLists[data.steporder - 2].startTime,
-        //     "hh:mm"
-        //   ) // 前置步骤开始时间
-        //   let endTime = this._moment(
-        //     this.timeLists[data.steporder - 2].endTime,
-        //     "hh:mm"
-        //   ) // 前置步骤结束时间
-        //   let timediff = endTime.diff(startTime, "minute") //计算相差的分钟数
-        //   this.timeLists[data.stepOrder - 2].total = timediff // 前置步骤执行时间
-        //   // 存储数据至sqlite
-        //   let tmp = {
-        //     endtime: endTime,
-        //     timediff: timediff
-        //   }
-        //   const _EXECUTEQUERY = `INSERT INTO records(endtime, timediff) VALUES (?,?) WHERE stepid = ''`
-        //   let _VALUE = [tmp.endtime, tmp.timediff]
-        //   // 插入数据
-        //   executeSql(this.db, _VALUE, _EXECUTEQUERY).then(
-        //     data => {
-        //       // console.log("insert success")
-        //     },
-        //     err => {
-        //       // console.log(err)
-        //     }
-        //   )
-        // }
+        if (data.steporder != 1) {
+          // 前置步骤结束时间 = 当前步骤的开始时间
+          this.timeLists[data.steporder - 2].endTime = this.timeLists[
+            data.steporder - 1
+          ].startTime
+          let startTime = this._moment(
+            this.timeLists[data.steporder - 2].startTime,
+            "hh:mm"
+          ) // 前置步骤开始时间
+          let endTime = this._moment(
+            this.timeLists[data.steporder - 2].endTime,
+            "hh:mm"
+          ) // 前置步骤结束时间
+          let timediff = endTime.diff(startTime, "minute") //计算相差的分钟数
+          this.timeLists[data.stepOrder - 2].total = timediff // 前置步骤执行时间
+          // 存储数据至sqlite
+          let tmp = {
+            endtime: endTime,
+            timediff: timediff
+          }
+          const _EXECUTEQUERY = `INSERT INTO records(endtime, timediff) VALUES (?,?) WHERE stepid = ''`
+          let _VALUE = [tmp.endtime, tmp.timediff]
+          // 插入数据
+          executeSql(this.db, _VALUE, _EXECUTEQUERY).then(
+            data => {
+              // console.log("insert success")
+            },
+            err => {
+              // console.log(err)
+            }
+          )
+        }
 
         // 存储当前步骤数据至sqlite
         let tmp = {
@@ -330,10 +330,10 @@ export default {
       // // 插入数据
       // console.log(_EXECUTEQUERY)
       sqlBatch(this.db, [
-        [ 'INSERT INTO actions(name, isstep, steporder) VALUES (?,?,?)', ['step1', '1', '1'] ],
-        [ 'INSERT INTO actions(name, isstep, steporder) VALUES (?,?,?)', ['step2', '1', '2'] ],
-        [ 'INSERT INTO actions(name, isstep, steporder) VALUES (?,?,?)', ['step3', '1', '3'] ],
-        [ 'INSERT INTO actions(name, isstep, steporder) VALUES (?,?,?)', ['step4', '1', '4'] ]
+        ['INSERT INTO actions(name, isstep, steporder) VALUES (?,?,?)', ['step1', '1', '1']],
+        ['INSERT INTO actions(name, isstep, steporder) VALUES (?,?,?)', ['step2', '1', '2']],
+        ['INSERT INTO actions(name, isstep, steporder) VALUES (?,?,?)', ['step3', '1', '3']],
+        ['INSERT INTO actions(name, isstep, steporder) VALUES (?,?,?)', ['step4', '1', '4']]
       ]).then(
         data => {
           console.log("insert success")
@@ -352,6 +352,18 @@ export default {
       }, err => {
         console.log(err)
       })
+    },
+    extraTableColumn () {
+      const _sql = 'ALTER TABLE actions ADD COLUMN currentstatus varchar(1)'
+      executeSql(this.db, [], _sql).then(
+        data => {
+          console.log("insert success")
+        },
+        err => {
+          console.log('insert error')
+          console.log(err)
+        }
+      )
     }
   }
 }
