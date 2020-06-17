@@ -2,10 +2,12 @@ module.exports = {
   root: true, // 作用的目录是根目录
   extends: 'standard', // 继承标准规则
   plugins: [
-    'html' // 使用eslint-plugin-html
+    'html', // 使用eslint-plugin-html
+    'vue'
   ],
-  parser: 'babel-eslint',
+  // parser: 'babel-eslint',
   parserOptions: {
+    parser: 'babel-eslint',
     ecmaVersion: 6,
     sourceType: 'module' // 按照模块的方式解析
   },

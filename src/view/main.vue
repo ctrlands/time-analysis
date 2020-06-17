@@ -54,7 +54,7 @@
 <script>
 import stepButton from "@/component/stepButton"
 import sideMenu from "@/component/sideMenu"
-import { openDB, executeSql, sqlBatch, sqlQuery } from "@/util/sqliteUtil"
+import { openDB, executeSql, sqlBatch, sqlQuery, extraTableColumn } from "@/util/sqliteUtil"
 export default {
   name: "main-component",
   components: {
@@ -169,15 +169,13 @@ export default {
       openDB("timeanlysis").then(
         data => {
           this.db = data
-          // const _sql = 'SELECT * FROM tabletest'
-          // sqlQuery(this.db, _sql).then(data => {
-          //   console.log('promise resolve callback')
-          //   console.log(data)
-          // }, err => {
-          //   console.log(err)
-          // })
+          // 初始化表
           // this.initSqlDefaultData()
-          this.getStepDatas()
+          // 添加额外列
+          // this.addTableColumn()
+          // this.getStepDatas()
+          // 删除表
+          // this.dropTable()
         },
         err => {
           // console.log(err);
@@ -285,9 +283,10 @@ export default {
           day: this._moment().format("D"),
           odate: this._moment().format("YYYY-M-D-H:m"),
           starttime: this._moment().format("H:m"),
+          disabled: 1
         }
-        const _EXECUTEQUERY = 'INSERT INTO records(stepid, year, month, day, odate, starttime) VALUES (?,?,?,?,?,?)'
-        let _VALUE = [tmp.stepid, tmp.year, tmp.month, tmp.day, tmp.odate, tmp.startTime]
+        const _EXECUTEQUERY = 'INSERT INTO records(stepid, year, month, day, odate, starttime, disabled) VALUES (?,?,?,?,?,?,?)'
+        let _VALUE = [tmp.stepid, tmp.year, tmp.month, tmp.day, tmp.odate, tmp.startTime, tmp.disabled]
         // 插入数据
         executeSql(this.db, _VALUE, _EXECUTEQUERY).then(
           data => {
@@ -303,12 +302,14 @@ export default {
     },
     // 插入sql测试数据
     initSqlDefaultData () {
+      const CREATE_ACTIONS_TYPE_TABLE =
+        "CREATE TABLE IF NOT EXISTS actiontypes (id integer primary key, name varchar(15), isstep varchar(1))"
       const CREATE_ACTIONS_TABLE =
-        "CREATE TABLE IF NOT EXISTS actions (id integer primary key, name varchar(15), isstep varchar(1), steporder varchar(10))"
+        "CREATE TABLE IF NOT EXISTS actions (id integer primary key, actiontypeid integer, name varchar(15), isstep varchar(1), steporder varchar(10))"
       const CREATE_RECORDS_TABLE =
-        "CREATE TABLE IF NOT EXISTS records (id integer primary key, stepid integer, year varchar(5), month varchar(2), day varchar(2), starttime text, endtime text, odate text, timediff text)"
+        "CREATE TABLE IF NOT EXISTS records (id integer primary key, actionid integer, year varchar(5), month varchar(2), day varchar(2), starttime text, endtime text, odate text, timediff text)"
       let _sqlBatch = []
-      _sqlBatch.push(CREATE_ACTIONS_TABLE, CREATE_RECORDS_TABLE)
+      _sqlBatch.push(CREATE_ACTIONS_TABLE, CREATE_RECORDS_TABLE, CREATE_ACTIONS_TYPE_TABLE)
       console.log(_sqlBatch)
       sqlBatch(this.db, _sqlBatch).then(
         data => {
@@ -320,15 +321,19 @@ export default {
           console.log(err)
         }
       )
+      // const CREATE_ACTIONS_TYPE_TABLE = "CREATE TABLE IF NOT EXISTS testtabledata (id integer primary key, name varchar(15), isstep varchar(1))"
+      // // _sqlBatch.push(CREATE_ACTIONS_TABLE, CREATE_RECORDS_TABLE)
+      // executeSql(this.db, [], CREATE_ACTIONS_TYPE_TABLE).then(
+      //   data => {
+      //     console.log("add table success")
+      //   },
+      //   err => {
+      //     console.log(err)
+      //   }
+      // )
     },
     insertTestData () {
-      // let s1 = ['INSERT INTO actions(name, isstep, steporder) VALUES (?,?,?)', ['step1', '1', '1']]
-      // let s2 = ['INSERT INTO actions(name, isstep, steporder) VALUES (?,?,?)', ['step2', '1', '2']]
-      // let s3 = ['INSERT INTO actions(name, isstep, steporder) VALUES (?,?,?)', ['step3', '1', '3']]
-      // let s4 = ['INSERT INTO actions(name, isstep, steporder) VALUES (?,?,?)', ['step4', '1', '4']]
-      // let _EXECUTEQUERY = s1.concat(s2, s3, s4)
       // // 插入数据
-      // console.log(_EXECUTEQUERY)
       sqlBatch(this.db, [
         ['INSERT INTO actions(name, isstep, steporder) VALUES (?,?,?)', ['step1', '1', '1']],
         ['INSERT INTO actions(name, isstep, steporder) VALUES (?,?,?)', ['step2', '1', '2']],
@@ -353,14 +358,20 @@ export default {
         console.log(err)
       })
     },
-    extraTableColumn () {
-      const _sql = 'ALTER TABLE actions ADD COLUMN currentstatus varchar(1)'
-      executeSql(this.db, [], _sql).then(
+    // 添加额外列
+    addTableColumn () {
+      console.log('in')
+      extraTableColumn(this.db, 'testtabledata', 'extracolumn text').then(data => { }, err => { console.log(err) })
+      extraTableColumn(this.db, 'testtabledata', 'lplorder text').then(data => { }, err => { console.log(err) })
+    },
+    // 删除数据表
+    dropTable () {
+      const _sql = ['DROP TABLE IF EXISTS actions', 'DROP TABLE IF EXISTS records']
+      sqlBatch(this.db, _sql).then(
         data => {
-          console.log("insert success")
+          console.log("删除table成功")
         },
         err => {
-          console.log('insert error')
           console.log(err)
         }
       )

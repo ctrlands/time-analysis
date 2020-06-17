@@ -36,13 +36,13 @@ export function executeSql (db, obj = [], sql) {
   return new Promise((resolve, reject) => {
     db.transaction(function (transaction) {
       transaction.executeSql(sql, obj, function (tx, result) {
-        // console.log('Table created successfully')
+        // console.log('executeSql successfully')
         resolve()
       },
-      function (err) {
-        // console.log("Error occurred while creating the table.");
-        reject(err)
-      })
+        function (err) {
+          // console.log("Error occurred while executeSql.");
+          reject(err)
+        })
     }, function (_err) {
       // db.close()
     }, function () {
@@ -95,5 +95,29 @@ export function sqlQuery (db, osql) {
     }, function () {
       // db.close()
     })
+  })
+}
+
+/**
+ * @description: table表添加列(sqlite不支持添加多列)
+ * @param {obj} db: 数据库对象
+ * @param {string} tbname: 表名
+ * @param {string} column: 需要添加的列名及类型
+ * input: extraTableColumn(db, 'tableName', 'disabled varchar(1)')
+ * result: ALTER TABLE tableName ADD COLUMN disabled varchar(1)
+ * @return: 
+ */
+export function extraTableColumn (db, tbname, column) {
+  const _sql = `ALTER TABLE ${tbname} ADD COLUMN ${column}`
+  return new Promise((resolve, reject) => {
+    executeSql(db, [], _sql).then(
+      data => {
+        // console.log("insert column success")
+        resolve()
+      },
+      err => {
+        reject(err)
+      }
+    )
   })
 }
