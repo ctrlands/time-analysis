@@ -39,10 +39,10 @@ export function executeSql (db, obj = [], sql) {
         // console.log('executeSql successfully')
         resolve()
       },
-        function (err) {
-          // console.log("Error occurred while executeSql.");
-          reject(err)
-        })
+      function (err) {
+        // console.log("Error occurred while executeSql.");
+        reject(err)
+      })
     }, function (_err) {
       // db.close()
     }, function () {
@@ -105,7 +105,7 @@ export function sqlQuery (db, osql) {
  * @param {string} column: 需要添加的列名及类型
  * input: extraTableColumn(db, 'tableName', 'disabled varchar(1)')
  * result: ALTER TABLE tableName ADD COLUMN disabled varchar(1)
- * @return: 
+ * @return:
  */
 export function extraTableColumn (db, tbname, column) {
   const _sql = `ALTER TABLE ${tbname} ADD COLUMN ${column}`

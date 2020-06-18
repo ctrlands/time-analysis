@@ -28,6 +28,14 @@ var routes = [
     component: () => import(/* webpackChunkName: "Main" */ '@/view/main')
   },
   {
+    path: '/addactiontype',
+    meta: {
+      title: '添加分类'
+    },
+    name: 'addactiontype',
+    component: () => import(/* webpackChunkName: "actiontype" */ '@/view/addActions')
+  },
+  {
     path: '/echart',
     meta: {
       title: 'echart'
