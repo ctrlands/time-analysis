@@ -1,6 +1,6 @@
 import Vue from 'vue'
 
-import { Step, Steps, Button, Col, Row, Switch, Cell, CellGroup, List, Popup, Progress, Divider, NavBar, Icon, Field } from 'vant'
+import { Checkbox, CheckboxGroup, Step, Steps, Button, Col, Row, Switch, Cell, CellGroup, List, Popup, Progress, Divider, NavBar, Icon, Field, Toast } from 'vant'
 
 Vue.use(Step)
 Vue.use(Steps)
@@ -17,3 +17,6 @@ Vue.use(Divider)
 Vue.use(NavBar)
 Vue.use(Icon)
 Vue.use(Field)
+Vue.use(Toast)
+Vue.use(Checkbox)
+Vue.use(CheckboxGroup)

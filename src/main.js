@@ -3,6 +3,7 @@ import App from './app'
 
 import moment from 'moment'
 import router from '../router/index'
+import store from './store/index'
 
 import './uiplugin/uiplugin'
 import 'lib-flexible/flexible'
@@ -13,6 +14,7 @@ Vue.prototype._moment = moment
 // for devlope
 new Vue({
   router,
+  store,
   render: h => h(App)
 }).$mount('#app')
 
