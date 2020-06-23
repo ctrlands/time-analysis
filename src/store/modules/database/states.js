@@ -1,4 +1,3 @@
 export default {
-  paramOne: 'paramOne',
-  paramTwo: 'paramTwo'
+  database: null
 }
