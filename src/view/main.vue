@@ -41,6 +41,7 @@
     <!-- <div class="middle">
       <step-button :buttons="onButtons" @btnClick="btnClick"></step-button>
     </div>-->
+    <router-link to="/actiontype">Go to actiontype</router-link>
     <div class="bottom">
       <step-button :buttons="steps" @btn-click-evt="btnClick"></step-button>
       <van-steps :active="active" active-icon="success" active-color="#38f">
@@ -123,7 +124,6 @@ export default {
     }
   },
   created () {
-    document.documentElement.setAttribute("data-theme", "light")
   },
   mounted () {
     this.onButtons.forEach(ele => {
@@ -132,36 +132,16 @@ export default {
         ele.disabled = false
       }
     })
-    this.getStepOrders()
+    this.initTable()
   },
   methods: {
     // 初始化db
-    initTable () {
-      openDB("timeanlysis").then(
-        data => {
-          this.db = data
-        },
-        err => {
-          // console.log(err);
-        }
-      )
+    async initTable () {
+      await this.$store.dispatch('Database/openDatabase', 'timeanlysis')
+      this.db = this.$store.state.Database.database
       if (this.db) {
-        // 创建表
-        const CREATE_ACTIONS_TABLE =
-          "CREATE TABLE IF NOT EXISTS actions (id integer primary key, name varchar(15), isstep varchar(1), steporder varchar(10))"
-        const CREATE_RECORDS_TABLE =
-          "CREATE TABLE IF NOT EXISTS records (id integer primary key, stepid integer, year varchar(5), month varchar(2), day varchar(2), starttime text, endtime text, odate text, timediff text)"
-        let _sqlBatch = []
-        _sqlBatch.push(CREATE_ACTIONS_TABLE, CREATE_RECORDS_TABLE)
-        sqlBatch(this.db, _sqlBatch).then(
-          data => {
-            console.log(data)
-            console.log("add table success")
-          },
-          err => {
-            console.log(err)
-          }
-        )
+        this.initSqlDefaultData()
+        this.getStepDatas()
       }
     },
     // 获取步骤数据
@@ -310,27 +290,17 @@ export default {
         "CREATE TABLE IF NOT EXISTS records (id integer primary key, actionid integer, year varchar(5), month varchar(2), day varchar(2), starttime text, endtime text, odate text, timediff text)"
       let _sqlBatch = []
       _sqlBatch.push(CREATE_ACTIONS_TABLE, CREATE_RECORDS_TABLE, CREATE_ACTIONS_TYPE_TABLE)
-      console.log(_sqlBatch)
       sqlBatch(this.db, _sqlBatch).then(
         data => {
           // console.log(data)
           console.log("add table success")
+          console.log(this.db)
           // this.insertTestData()
         },
         err => {
           console.log(err)
         }
       )
-      // const CREATE_ACTIONS_TYPE_TABLE = "CREATE TABLE IF NOT EXISTS testtabledata (id integer primary key, name varchar(15), isstep varchar(1))"
-      // // _sqlBatch.push(CREATE_ACTIONS_TABLE, CREATE_RECORDS_TABLE)
-      // executeSql(this.db, [], CREATE_ACTIONS_TYPE_TABLE).then(
-      //   data => {
-      //     console.log("add table success")
-      //   },
-      //   err => {
-      //     console.log(err)
-      //   }
-      // )
     },
     insertTestData () {
       // // 插入数据
@@ -350,7 +320,7 @@ export default {
       )
     },
     getStepDatas () {
-      const _sql = 'SELECT * from actions'
+      const _sql = 'SELECT * from actiontypes'
       sqlQuery(this.db, _sql).then(data => {
         this.steps = data
         console.log(this.steps)

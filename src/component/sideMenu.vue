@@ -60,6 +60,7 @@ export default {
       } else {
         this.uiStatusDesc = "夜间模式";
       }
+      window.localStorage.setItem('style', type)
       window.document.documentElement.setAttribute("data-theme", type);
     }
   }

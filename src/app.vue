@@ -12,6 +12,8 @@ export default {
     }
   },
   created () {
+    let _style = window.localStorage.getItem('style') ? window.localStorage.getItem('style') : 'dark'
+    document.documentElement.setAttribute("data-theme", _style)
   },
   methods: {
   }

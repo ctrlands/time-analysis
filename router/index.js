@@ -28,12 +28,22 @@ var routes = [
     component: () => import(/* webpackChunkName: "Main" */ '@/view/main')
   },
   {
-    path: '/addactiontype',
+    path: '/actiontype',
     meta: {
-      title: '添加分类'
+      title: '分类管理'
     },
-    name: 'addactiontype',
-    component: () => import(/* webpackChunkName: "actiontype" */ '@/view/addActions')
+    name: 'actiontype',
+    component: () => import(/* webpackChunkName: "actiontype" */ '@/view/ActionTypes'),
+    children: [
+      {
+        name: 'actions',
+        path: '/actions',
+        meta: {
+          title: '动作管理'
+        },
+        component: () => import(/* webpackChunkName: "actiontype" */ '@/view/Actions')
+      }
+    ]
   },
   {
     path: '/echart',
