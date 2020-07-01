@@ -17,15 +17,14 @@ VueRouter.prototype.push = function push (location) {
 
 Vue.use(VueRouter)
 
-var routes = [
+let routes = [
   {
     path: '/',
     meta: {
       title: 'Main'
     },
     name: 'Main',
-    // component: () => import('@/view/main')
-    component: () => import(/* webpackChunkName: "Main" */ '@/view/main')
+    component: () => import('@/view/main')
   },
   {
     path: '/actiontype',
@@ -34,29 +33,19 @@ var routes = [
     },
     name: 'actiontype',
     component: () => import(/* webpackChunkName: "actiontype" */ '@/view/ActionTypes'),
-    children: [
-      {
-        name: 'actions',
-        path: '/actions',
-        meta: {
-          title: '动作管理'
-        },
-        component: () => import(/* webpackChunkName: "actiontype" */ '@/view/Actions')
-      }
-    ]
   },
   {
-    path: '/echart',
+    name: 'actions',
+    path: '/actions',
     meta: {
-      title: 'echart'
+      title: '行为管理'
     },
-    name: 'echart',
-    // component: () => import('@/component/echart')
-    component: () => import(/* webpackChunkName: "echart" */ '@/component/echart')
-  }
+    component: () => import(/* webpackChunkName: "actiontype" */ '@/view/Actions')
+  },
+
 ]
 
-var router = new VueRouter({
+let router = new VueRouter({
   routes
 })
 

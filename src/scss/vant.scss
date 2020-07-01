@@ -32,6 +32,16 @@
     background-color: $baseBckColor_light;
   }
 }
+
+// cell-group
+.van-cell-group {
+  [data-theme="dark"] & {
+    background-color: $baseBckColor_dark;
+  }
+  [data-theme="light"] & {
+    background-color: $baseBckColor_light;
+  }
+}
 .van-cell {
   [data-theme="dark"] & {
     background-color: $baseBckColor_dark;
@@ -53,5 +63,43 @@
   }
   [data-theme="light"] & {
     background-color: $baseBorderColor_dark_alpha50;
+  }
+}
+
+// nav-bar
+.van-nav-bar {
+  [data-theme="dark"] & {
+    background-color: $baseBckColor_dark;
+  }
+  [data-theme="light"] & {
+    background-color: $baseBckColor_light;
+  }
+}
+
+// dialog
+.van-dialog {
+  [data-theme="dark"] & {
+    background-color: $baseBckColor_dark;
+  }
+  [data-theme="light"] & {
+    background-color: $baseBckColor_light;
+  }
+  .van-button--default {
+    [data-theme="dark"] & {
+      color: $baseColor_dark;
+      background-color: $baseBckColor_dark;
+    }
+    [data-theme="light"] & {
+      color: $baseColor_light;
+      background-color: $baseBckColor_light;
+    }
+  }
+  .van-checkbox__label, .van-field__control {
+    [data-theme="dark"] & {
+      color: $baseColor_dark;
+    }
+    [data-theme="light"] & {
+      color: $baseColor_light;
+    }
   }
 }

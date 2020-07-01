@@ -12,7 +12,7 @@ export default {
     }
   },
   created () {
-    let _style = window.localStorage.getItem('style') ? window.localStorage.getItem('style') : 'dark'
+    let _style = window.localStorage.getItem('style') ? window.localStorage.getItem('style') : 'light'
     document.documentElement.setAttribute("data-theme", _style)
   },
   methods: {

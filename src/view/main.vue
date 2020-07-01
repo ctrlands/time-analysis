@@ -41,7 +41,8 @@
     <!-- <div class="middle">
       <step-button :buttons="onButtons" @btnClick="btnClick"></step-button>
     </div>-->
-    <router-link to="/actiontype">Go to actiontype</router-link>
+    <p style="color:#999;" @click="go">Go to actiontype</p>
+    <!-- <router-link to="/actiontype"><span style="color:#999;">Go to actiontype</span></router-link> -->
     <div class="bottom">
       <step-button :buttons="steps" @btn-click-evt="btnClick"></step-button>
       <van-steps :active="active" active-icon="success" active-color="#38f">
@@ -135,6 +136,11 @@ export default {
     this.initTable()
   },
   methods: {
+    go () {
+      this.$router.push({
+        path: '/actiontype'
+      })
+    },
     // 初始化db
     async initTable () {
       await this.$store.dispatch('Database/openDatabase', 'timeanlysis')

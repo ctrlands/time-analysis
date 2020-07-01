@@ -23,6 +23,7 @@
               @touchstart="touchstart($event, item)"
               @touchmove="touchmove($event, item)"
               @touchend="touchend($event, item)"
+              @click="goAction(item)"
             >
               <div class="list-action-info-wrapper">
                 <span>{{ item.name }}</span>
@@ -85,13 +86,22 @@ export default {
       active: "",
       actionTypes: [],
       // false: add, true: edit
-      status: false
+      status: false,
+      actionId: null
     }
   },
   created() {
     this.getActionTypes()
   },
   methods: {
+    goAction (item) {
+      this.$router.push({
+        path: '/actions',
+        query: {
+          actionTypeId: item.id
+        }
+      })
+    },
     // 弹窗取消/确认
     beforeCloseDialog(action, done) {
       if (action == "confirm") {
@@ -127,15 +137,14 @@ export default {
           return
         }
         if (_self.status) {
-          const _EXECUTEUPDATE = `UPDATE actiontypes SET name = ${_self.actionTypeName}, isstep = ${_self.isStep} WHERE ID = ${item.id};`
-          let _VALUE = [_self.actionTypeName, _self.isStep]
+          const _EXECUTEUPDATE = `UPDATE actiontypes SET name = '${_self.actionTypeName}', isstep = '${_self.isStep}' WHERE id = '${_self.actionId}'`
           executeSql(
             _self.$store.state.Database.database,
-            _VALUE,
+            [],
             _EXECUTEUPDATE
           ).then(
             (data) => {
-              this.$toast('修改成功')
+              _self.$toast('修改成功')
               resolve()
             },
             (err) => {
@@ -154,7 +163,7 @@ export default {
             _EXECUTEQUERY
           ).then(
             (data) => {
-              this.$toast('添加成功')
+              _self.$toast('添加成功')
               resolve()
             },
             (err) => {
@@ -220,6 +229,7 @@ export default {
     },
     // 编辑
     handleEdit(item) {
+      this.actionId = item.id
       this.actionTypeName = item.name
       this.isStep = item.isstep
       this.isShowDialog = true
@@ -231,42 +241,42 @@ export default {
 
 <style lang="scss">
 .body-middle {
-  padding-top: 50px;
+  padding-top: 50PX;
   width: 100%;
   overflow-x: hidden;
 }
 .list-wrapper {
-  padding: 12px;
+  padding: 12PX;
   ul li {
-    padding: 5px 0;
+    padding: 5PX 0;
   }
   .list-action-info-wrapper {
     position: relative;
-    line-height: 28px;
+    line-height: 28PX;
   }
   .list-action-btn-wrapper {
     display: inline-block;
     position: absolute;
-    right: -120px;
+    right: -120PX;
   }
 }
 .add-action-type-dialog-wrapper {
   .cell-wrapper {
-    padding: 12px 12px 3px 12px;
+    padding: 12PX 12PX 3PX 12PX;
     .van-cell.van-field {
-      padding: 5px 16px;
-      border-bottom: 1px solid rgba(153, 153, 153, 0.3);
+      padding: 5PX 16PX;
+      border-bottom: 1PX solid rgba(153, 153, 153, 0.3);
     }
     .van-checkbox {
-      padding: 5px 0;
+      padding: 5PX 0;
     }
     .van-checkbox__label {
-      font-size: 14px;
+      font-size: 14PX;
     }
   }
   .van-hairline--top.van-dialog__footer.van-dialog__footer--buttons {
     .van-button--large {
-      height: 30px;
+      height: 30PX;
     }
   }
 }
@@ -276,10 +286,10 @@ export default {
 }
 @keyframes right-to-left-ani {
   0% {
-    right: -120px;
+    right: -120PX;
   }
   50% {
-    right: 60px;
+    right: 60PX;
   }
   100% {
     right: 0;

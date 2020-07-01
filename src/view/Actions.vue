@@ -1,10 +1,10 @@
 <template>
-  <!-- 类型管理界面 add/edit/del/update  title="分类"-->
+  <!-- 行为管理界面 add/edit/del/update -->
   <div>
     <van-nav-bar
       :border="false"
       fixed
-      left-text="分类"
+      left-text="行为管理"
       left-arrow
       @click-left="goPrev"
       @click-right="handleAddActionType"
@@ -18,7 +18,7 @@
         <van-col span="24">
           <ul>
             <li
-              v-for="(item, index) in lists"
+              v-for="(item, index) in actions"
               :key="index"
               @touchstart="touchstart($event, item)"
               @touchmove="touchmove($event, item)"
@@ -28,11 +28,11 @@
                 <span>{{ item.name }}</span>
                 <div
                   class="list-action-btn-wrapper"
-                  v-show="active==item.id"
-                  :class="{'btn-wrapper__active': active==item.id}"
+                  v-show="active == item.id"
+                  :class="{ 'btn-wrapper__active': active == item.id }"
                 >
-                  <van-button type="default" size="mini">编辑</van-button>
-                  <van-button type="default" size="mini">删除</van-button>
+                  <van-button type="default" size="mini" @click="handleEdit(item)">编辑</van-button>
+                  <van-button type="default" size="mini" @click="handleDel(item)">删除</van-button>
                 </div>
               </div>
             </li>
@@ -49,9 +49,26 @@
       <van-row>
         <van-col span="24">
           <van-cell-group :border="false" class="cell-wrapper">
-            <van-field v-model="actionTypeName" placeholder="请输入类型名称" />
-            <van-checkbox v-model="isStep" icon-size="16PX">是否按步骤进行</van-checkbox>
+            <van-field v-model="actionName" placeholder="请输入行为名称" />
           </van-cell-group>
+        </van-col>
+      </van-row>
+      <van-row type="flex" justify="space-between">
+        <van-col span="12">
+          <span class="label">序号</span>
+        </van-col>
+        <van-col span="12">
+          <van-stepper
+            v-model="stepNum"
+            :min="minStep"
+            :disabled="isStepDisabled"
+            max="8"
+            input-width="60"
+            theme="round"
+            integer
+            button-size="18"
+            class="step-wrapper"
+          />
         </van-col>
       </van-row>
     </van-dialog>
@@ -59,94 +76,189 @@
 </template>
 
 <script>
-import { executeSql } from "@/util/sqliteUtil"
+import { executeSql, sqlQuery } from "@/util/sqliteUtil"
 export default {
-  name: 'add-actions-view',
+  name: "add-actions-view",
   data () {
     return {
+      isStepDisabled: false,
       isShowDialog: false,
-      actionTypeName: '',
-      isStep: false,
-      lists: [{
-        id: 1,
-        name: '分类1',
-      }, {
-        id: 2,
-        name: '分类2',
-      }, {
-        id: 3,
-        name: '分类4',
-      }],
+      actionName: "",
+      stepNum: 0,
       clientStartX: 0,
       clientEndX: 0,
       isMove: false,
-      active: '',
+      active: "",
+      actions: [],
+      // false: add, true: edit
+      status: false,
+      actionId: null,
+      minStep: 1
     }
   },
   created () {
+    this.getActions()
   },
   methods: {
     // 弹窗取消/确认
     beforeCloseDialog (action, done) {
-      if (action == 'confirm') {
-        this.confirmAddActionType().then(result => {
-          this.$toast('操作成功')
-          done()
-        }, err => {
-          done(false)
-        })
+      if (action == "confirm") {
+        this.confirmAddActionType().then(
+          (result) => {
+            this.getActions()
+            this.getPrevMaxStepOrder()
+            done()
+          },
+          (err) => {
+            done(false)
+          }
+        )
       } else {
         // 取消
         done()
       }
     },
     goPrev () {
-      this.$router.push('/')
+      this.$router.push("/")
     },
     // 保存数据
     confirmAddActionType () {
       let _self = this
       return new Promise((resolve, reject) => {
-        let strLen = _self.actionTypeName.match(/[^ -~]/g) == null ? _self.actionTypeName.length : _self.actionTypeName.length + _self.actionTypeName.match(/[^ -~]/g).length;
-        if (_self.actionTypeName == '' || strLen > 10) {
-          _self.$toast('文本不能为空且长度不能超过10个字符串')
+        let strLen =
+          _self.actionName.match(/[^ -~]/g) == null
+            ? _self.actionName.length
+            : _self.actionName.length + _self.actionName.match(/[^ -~]/g).length
+        if (_self.actionName == "" || strLen > 10) {
+          _self.$toast("文本不能为空且长度不能超过10个字符串")
           reject()
           return
         }
-        const _EXECUTEQUERY = 'INSERT INTO actiontypes(name, isstep) VALUES (?,?)'
-        let _VALUE = [_self.actionTypeName, _self.isStep]
-        // 插入数据
-        executeSql(_self.$store.state.Database.database, _VALUE, _EXECUTEQUERY).then(
-          data => {
-            resolve()
-          },
-          err => {
-            _self.$toast('保存异常, 请稍后再试')
-            reject(err)
-          }
-        )
+        if (_self.status) {
+          const _EXECUTEUPDATE = `UPDATE actions SET name = '${_self.actionName}' WHERE id = '${_self.actionId}'`
+          executeSql(
+            _self.$store.state.Database.database,
+            [],
+            _EXECUTEUPDATE
+          ).then(
+            (data) => {
+              _self.$toast("修改成功")
+              resolve()
+            },
+            (err) => {
+              _self.$toast("修改异常, 请稍后再试")
+              reject(err)
+            }
+          )
+        } else {
+          const _EXECUTEINSERT =
+            "INSERT INTO actions(name, actiontypeid, isstep, steporder) VALUES (?,?,?,?)"
+          let _VALUE = [
+            _self.actionName,
+            _self.$route.query.actionTypeId,
+            "true",
+            _self.stepNum
+          ]
+          // 插入数据
+          executeSql(
+            _self.$store.state.Database.database,
+            _VALUE,
+            _EXECUTEINSERT
+          ).then(
+            (data) => {
+              _self.$toast("添加成功")
+              resolve()
+            },
+            (err) => {
+              _self.$toast("添加异常, 请稍后再试")
+              reject(err)
+            }
+          )
+        }
       })
     },
+    // 添加
     handleAddActionType () {
       this.isShowDialog = true
+      this.status = false
+      this.isStepDisabled = false
+      this.stepNum = this.minStep
     },
     touchstart (evt, item) {
       this.isMove = false
       this.clientStartX = evt.touches[0].clientX
     },
     touchmove (evt, item) {
-      evt.preventDefault();
+      evt.preventDefault()
       this.isMove = true
       this.clientEndX = evt.touches[0].clientX
     },
     touchend (evt, item) {
       if (this.isMove) {
         let gap = this.clientStartX - this.clientEndX
-        gap >= 10 ? this.active = item.id : this.active = ''
+        gap >= 10 ? (this.active = item.id) : (this.active = "")
       }
+    },
+    // 获取上一次的step序号
+    getPrevMaxStepOrder () {
+      const _sql = `SELECT MAX(steporder) as prevMaxStepOrder from actions WHERE actiontypeid = '${this.$route.query.actionTypeId}'`
+      sqlQuery(this.$store.state.Database.database, _sql).then(
+        (data) => {
+          data.length > 0 ? (this.minStep = Number(data[0].prevMaxStepOrder) + 1) : (this.minStep = 1)
+        },
+        (_err) => { }
+      )
+    },
+    // 获取分类数据
+    getActions () {
+      const _sql = `SELECT id, name, actiontypeid, isstep, steporder from actions WHERE actiontypeid = '${this.$route.query.actionTypeId}'`
+      sqlQuery(this.$store.state.Database.database, _sql).then(
+        (data) => {
+          data.length > 0 && (this.actions = data)
+        },
+        (_err) => { }
+      )
+    },
+    // 删除 只允许从后面往前面顺序删除, 不允许乱序删除
+    handleDel (item) {
+      this.$dialog.confirm({
+        message: "确认删除?",
+        beforeClose: (action, done) => {
+          if (action === "confirm") {
+            if ((this.minStep - 1) != item.steporder) {
+              this.$toast('只允许逆序删除')
+              done(false)
+            } else {
+              const _sql = `DELETE FROM actions WHERE id = ${item.id}`
+              executeSql(this.$store.state.Database.database, [], _sql).then(
+                (data) => {
+                  this.getActions()
+                  this.getPrevMaxStepOrder()
+                  this.$toast("删除成功")
+                  done()
+                },
+                (_err) => {
+                  this.$toast("删除异常")
+                  done(false)
+                }
+              )
+            }
+          } else {
+            done()
+          }
+        }
+      })
+    },
+    // 编辑 只允许修改名称
+    handleEdit (item) {
+      this.isStepDisabled = true
+      this.actionId = item.id
+      this.actionName = item.name
+      this.isShowDialog = true
+      this.status = true
+      this.stepNum = item.steporder
     }
-  },
-
+  }
 }
 </script>
 
@@ -181,9 +293,9 @@ export default {
     .van-checkbox {
       padding: 5PX 0;
     }
-      .van-checkbox__label {
-        font-size: 14PX;
-      }
+    .van-checkbox__label {
+      font-size: 14PX;
+    }
   }
   .van-hairline--top.van-dialog__footer.van-dialog__footer--buttons {
     .van-button--large {
@@ -193,7 +305,7 @@ export default {
 }
 
 .btn-wrapper__active {
-  animation: right-to-left-ani .5s forwards;
+  animation: right-to-left-ani 0.5s forwards;
 }
 @keyframes right-to-left-ani {
   0% {
@@ -205,5 +317,17 @@ export default {
   100% {
     right: 0;
   }
+}
+</style>
+
+<style lang="scss" scope>
+.label {
+  text-align: left;
+  line-height: 18PX;
+  padding-left: 12PX;
+}
+.step-wrapper {
+  text-align: right;
+  padding-right: 12PX;
 }
 </style>

@@ -40,11 +40,12 @@ export function executeSql (db, obj = [], sql) {
         resolve()
       },
       function (err) {
+        console.log('db executeSql err: ')
         console.log(err)
-        console.log('Error occurred while executeSql.')
         reject(err)
       })
     }, function (_err) {
+      console.log('db connection err: ')
       console.log(_err)
       // db.close()
     }, function () {
