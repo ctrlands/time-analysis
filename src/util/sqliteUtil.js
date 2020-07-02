@@ -29,7 +29,7 @@ export function openDB (dbname) {
 /**
  * @description: 数据库操作
  * @param {type} db 数据库对象 sql sql语句, liker 'CREATE TABLE IF NOT EXISTS tabletest (id integer primary key, title text, desc text)'
- * @param obj: [表字段1的值, 表字段2的值, ......]
+ * @param obj: [表字段1的值, 表字段2的值, ......] <==>  (?,?,...)
  * @return:
  */
 export function executeSql (db, obj = [], sql) {

@@ -20,9 +20,7 @@
             <li
               v-for="(item, index) in actions"
               :key="index"
-              @touchstart="touchstart($event, item)"
-              @touchmove="touchmove($event, item)"
-              @touchend="touchend($event, item)"
+              v-swipeleft="{fn:touchend, name: item}"
             >
               <div class="list-action-info-wrapper">
                 <span>{{ item.name }}</span>
@@ -85,9 +83,6 @@ export default {
       isShowDialog: false,
       actionName: "",
       stepNum: 0,
-      clientStartX: 0,
-      clientEndX: 0,
-      isMove: false,
       active: "",
       actions: [],
       // false: add, true: edit
@@ -184,20 +179,9 @@ export default {
       this.isStepDisabled = false
       this.stepNum = this.minStep
     },
-    touchstart (evt, item) {
-      this.isMove = false
-      this.clientStartX = evt.touches[0].clientX
-    },
-    touchmove (evt, item) {
-      evt.preventDefault()
-      this.isMove = true
-      this.clientEndX = evt.touches[0].clientX
-    },
-    touchend (evt, item) {
-      if (this.isMove) {
-        let gap = this.clientStartX - this.clientEndX
-        gap >= 10 ? (this.active = item.id) : (this.active = "")
-      }
+    touchend (obj, evt) {
+      let item = obj.name
+      this.active = item.id
     },
     // 获取上一次的step序号
     getPrevMaxStepOrder () {

@@ -8,7 +8,7 @@ import store from './store/index'
 import './uiplugin/uiplugin'
 import 'lib-flexible/flexible'
 import '@babel/polyfill'
-// require('babel-polyfill')
+import './direct/swip'
 
 Vue.config.productionTip = false
 Vue.prototype._moment = moment

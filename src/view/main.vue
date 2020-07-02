@@ -1,28 +1,23 @@
 <template>
-  <div
-    class="main-wrapper"
-    @touchstart.self="touchstart"
-    @touchmove.self="touchmove"
-    @touchend.self="touchend"
-  >
+  <div class="main-wrapper" v-swiperight="{fn:touchend, name:'right'}">
     <div class="list-wrapper">
-      <van-list v-model="loading" :finished="finished" @load="getLists">
-        <div v-for="(list, index) in timeLists" :key="index" class="row-wrapper">
+      <van-list v-model="loading" v-bind:finished="finished" v-on:load="getLists">
+        <div v-for="(list, index) in timeLists" v-bind:key="index" class="row-wrapper">
           <van-row>
             <van-col span="8" class="col-align-left">
               <p class="main-text">{{ list.name }}</p>
             </van-col>
             <van-col span="8" class="col-align-center">
-              <p class="main-text">{{ list.startTime }} -- {{ list.endTime }}</p>
+              <p class="main-text">{{ list.starttime }} -- {{ list.endtime }}</p>
             </van-col>
             <van-col span="8" class="col-align-right">
-              <p class="main-text">{{ list.total }}min</p>
+              <p class="main-text">{{ list.timediff }}min</p>
             </van-col>
           </van-row>
           <van-row>
             <van-col span="24">
               <van-progress
-                :percentage="list.total >= 60 ? 100 : 1.6 * list.total"
+                :percentage="list.timediff >= 60 ? 100 : 1.6 * list.timediff"
                 :show-pivot="false"
               />
             </van-col>
@@ -44,9 +39,13 @@
     <p style="color:#999;" @click="go">Go to actiontype</p>
     <!-- <router-link to="/actiontype"><span style="color:#999;">Go to actiontype</span></router-link> -->
     <div class="bottom">
-      <step-button :buttons="steps" @btn-click-evt="btnClick"></step-button>
+      <step-button :buttons="steps" @btn-click-evt="btnClick" @btn-end-evt="endClick"></step-button>
       <van-steps :active="active" active-icon="success" active-color="#38f">
-        <van-step v-for="(step, index) in steps" :key="index">{{ step.name }}</van-step>
+        <van-step v-for="(step, index) in steps" :key="index">
+          {{
+          step.name
+          }}
+        </van-step>
       </van-steps>
     </div>
     <side-menu :isSidePopupShow="isSidePopupShow" @popup-close="popupClose"></side-menu>
@@ -56,7 +55,13 @@
 <script>
 import stepButton from "@/component/stepButton"
 import sideMenu from "@/component/sideMenu"
-import { openDB, executeSql, sqlBatch, sqlQuery, extraTableColumn } from "@/util/sqliteUtil"
+import {
+  openDB,
+  executeSql,
+  sqlBatch,
+  sqlQuery,
+  extraTableColumn
+} from "@/util/sqliteUtil"
 export default {
   name: "main-component",
   components: {
@@ -113,179 +118,178 @@ export default {
         }
       ],
       active: 0,
-      uid: 0,
-      touchStartX: 0,
-      touchEndX: 0,
-      touchStartY: 0,
-      touchEndY: 0,
-      isSwipRight: false,
       db: null,
       resultData: [],
       steps: []
     }
   },
-  created () {
-  },
+  created () { },
   mounted () {
-    this.onButtons.forEach(ele => {
-      this.$set(ele, "disabled", true)
-      if (ele.stepOrder == 1) {
-        ele.disabled = false
-      }
-    })
     this.initTable()
   },
   methods: {
     go () {
       this.$router.push({
-        path: '/actiontype'
+        path: "/actiontype"
       })
+    },
+    initBtn () {
+      let currentStep = null
+      window.localStorage.clear()
+      if (window.localStorage.getItem('currentStep')) {
+        currentStep = JSON.parse(window.localStorage.getItem('currentStep'))
+      }
+      this.steps.forEach((ele) => {
+        this.$set(ele, "disabled", 1)
+        if (ele.steporder == 1) {
+          ele.disabled = 0
+        }
+        if (currentStep && ele.steporder == (currentStep.steporder + 1)) {
+          ele.disabled = 0
+        }
+      })
+      console.log(this.steps)
     },
     // 初始化db
     async initTable () {
-      await this.$store.dispatch('Database/openDatabase', 'timeanlysis')
+      await this.$store.dispatch("Database/openDatabase", "timeanlysis")
       this.db = this.$store.state.Database.database
       if (this.db) {
         this.initSqlDefaultData()
         this.getStepDatas()
+        // this.addTableColumn()
+        // this.dropTable()
       }
-    },
-    // 获取步骤数据
-    getStepOrders () {
-      openDB("timeanlysis").then(
-        data => {
-          this.db = data
-          // 初始化表
-          // this.initSqlDefaultData()
-          // 添加额外列
-          // this.addTableColumn()
-          // this.getStepDatas()
-          // 删除表
-          // this.dropTable()
-        },
-        err => {
-          // console.log(err);
-        }
-      )
     },
     popupClose () {
       this.isSidePopupShow = false
     },
-    touchstart (evt) {
-      this.touchStartX = evt.touches[0].clientX
-      this.touchStartY = evt.touches[0].clientY
-    },
-    touchmove (evt) {
-      this.touchEndX = evt.touches[0].clientX
-      this.touchEndY = evt.touches[0].clientY
-      if (
-        this.touchEndX - this.touchStartX > 50 &&
-        Math.abs(this.touchStartY - this.touchEndY) < 10
-      ) {
-        this.isSwipRight = true
-      } else {
-        this.isSwipRight = false
-      }
-    },
-    touchend (evt) {
-      // 向右滑动
-      if (this.isSwipRight) {
-        this.isSidePopupShow = true
-      } else {
-        this.isSidePopupShow = false
-      }
+    touchend (obj, evt) {
+      this.isSidePopupShow = true
     },
     getLists () {
       this.loading = false
       this.finished = true
       // 查询数据
+      const _sql = "SELECT * from records"
+      sqlQuery(this.$store.state.Database.database, _sql).then(
+        (data) => {
+          this.timeLists = data
+        },
+        (err) => {
+          console.log(err)
+        }
+      )
     },
     /**
      * @description: 按钮点击时记录当前时间
      * @param {type}
      * @return:
      */
-
     btnClick (data) {
       // 储存当前步骤信息, 储存前置步骤结束时间等信息
       let _this = this
-      data.disabled = true
-      let nextStep = this.steps.filter(item => {
-        return item.steporder && item.steporder == data.steporder + 1
+      data.disabled = 1
+      let nextStep = this.steps.filter((item) => {
+        return item.steporder && item.steporder == (Number(data.steporder) + 1)
       })
-      if (nextStep.length > 0) nextStep[0].disabled = false
+      console.log(nextStep)
+      if (nextStep.length > 0) nextStep[0].disabled = 0
       this.active = data.steporder
-      // this.onButtons[data.stepOrder].disabled = false;
       if (data.isstep) {
-        this.uid++
-        // 存储数据至sqlite
-        this.timeLists.push({
-          id: data.id,
+        // 存储当前步骤数据至sqlite
+        let tmp = {
+          actionid: data.id,
+          year: _this._moment().format("YYYY"),
+          month: _this._moment().format("M"),
+          day: _this._moment().format("D"),
+          odate: _this._moment().format("YYYY-M-D H:m"),
+          starttime: _this._moment().format("H:m"),
           name: data.name,
-          startTime: this._moment().format("H:m"),
-          endTime: "",
-          year: this._moment().format("YYYY"),
-          month: this._moment().format("MM"),
-          total: 0
-        })
-        if (data.steporder != 1) {
-          // 前置步骤结束时间 = 当前步骤的开始时间
-          this.timeLists[data.steporder - 2].endTime = this.timeLists[
-            data.steporder - 1
-          ].startTime
-          let startTime = this._moment(
-            this.timeLists[data.steporder - 2].startTime,
-            "hh:mm"
-          ) // 前置步骤开始时间
-          let endTime = this._moment(
-            this.timeLists[data.steporder - 2].endTime,
-            "hh:mm"
-          ) // 前置步骤结束时间
-          let timediff = endTime.diff(startTime, "minute") //计算相差的分钟数
-          this.timeLists[data.stepOrder - 2].total = timediff // 前置步骤执行时间
-          // 存储数据至sqlite
-          let tmp = {
-            endtime: endTime,
-            timediff: timediff
+          disabled: 1
+        }
+        const _EXECUTEINSERT =
+          "INSERT INTO records(actionid, year, month, day, odate, starttime, name, disabled) VALUES (?,?,?,?,?,?,?,?)"
+        let _VALUE = [
+          tmp.actionid,
+          tmp.year,
+          tmp.month,
+          tmp.day,
+          tmp.odate,
+          tmp.starttime,
+          tmp.name,
+          tmp.disabled
+        ]
+        // 插入数据
+        executeSql(_this.$store.state.Database.database, _VALUE, _EXECUTEINSERT).then(
+          (result) => {
+            window.localStorage.setItem('currentStep', JSON.stringify(tmp))
+          },
+          (err) => {
+            console.log("insert error")
+            console.log(err)
           }
-          const _EXECUTEQUERY = `INSERT INTO records(endtime, timediff) VALUES (?,?) WHERE stepid = ''`
-          let _VALUE = [tmp.endtime, tmp.timediff]
+        )
+
+        let currentStep = JSON.parse(window.localStorage.getItem('currentStep'))
+        // 存储数据至sqlite
+        if (currentStep && currentStep.steporder != 1) {
+          // 前置步骤结束时间 = 当前步骤的开始时间
+          currentStep.endtime = _this._moment().format("H:m")
+          let oendtime = _this._moment().format("YYYY-M-D H:m")
+          let etime = _this._moment(oendtime)
+          let ostarttime = _this._moment(currentStep.odate)
+          let timediff = etime.diff(ostarttime, "minute") //计算相差的分钟数
+          currentStep.timediff = timediff // 前置步骤执行时间
+          // 存储数据至sqlite
+          const _EXECUTEQUERY = `UPDATE records SET endtime = '${currentStep.endtime}', timediff = '${timediff}' WHERE actionid = '${currentStep.actionid}'`
           // 插入数据
-          executeSql(this.db, _VALUE, _EXECUTEQUERY).then(
-            data => {
-              // console.log("insert success")
+          executeSql(_this.$store.state.Database.database, [], _EXECUTEQUERY).then(
+            (data) => {
+              console.log("insert  prev  ---------------  success")
             },
-            err => {
+            (err) => {
               // console.log(err)
             }
           )
         }
-
-        // 存储当前步骤数据至sqlite
-        let tmp = {
-          stepid: data.id,
-          year: this._moment().format("YYYY"),
-          month: this._moment().format("M"),
-          day: this._moment().format("D"),
-          odate: this._moment().format("YYYY-M-D-H:m"),
-          starttime: this._moment().format("H:m"),
-          disabled: 1
-        }
-        const _EXECUTEQUERY = 'INSERT INTO records(stepid, year, month, day, odate, starttime, disabled) VALUES (?,?,?,?,?,?,?)'
-        let _VALUE = [tmp.stepid, tmp.year, tmp.month, tmp.day, tmp.odate, tmp.startTime, tmp.disabled]
+      } else {
+        window.localStorage.removeItem('currentStep')
+      }
+      _this.getLists()
+    },
+    // 结束流程
+    endClick () {
+      let _this = this
+      // 记录点击时间
+      // 拿到前置步骤开始时间
+      // 计算时间差
+      // 更新前置步骤结束时间
+      if (window.localStorage.getItem('currentStep')) {
+        let currentStep = JSON.parse(window.localStorage.getItem('currentStep'))
+        let oendtime = _this._moment().format("H:m")
+        let endtime = _this._moment(_this._moment().format("YYYY-M-D H:m"))
+        let starttime = _this._moment(currentStep.odate)
+        let timediff = endtime.diff(starttime, "minute") //计算相差的分钟数
+        // 存储数据至sqlite
+        const _EXECUTEUPDATE = `UPDATE records SET endtime = '${oendtime}', timediff = '${timediff}' WHERE actionid = '${currentStep.actionid}'`
         // 插入数据
-        executeSql(this.db, _VALUE, _EXECUTEQUERY).then(
-          data => {
-            console.log("insert success")
+        executeSql(_this.$store.state.Database.database, [], _EXECUTEUPDATE).then(
+          (data) => {
+            _this.getLists()
           },
-          err => {
-            console.log('insert error')
-            console.log(err)
+          (err) => {
+            // console.log(err)
           }
         )
       }
-      this.getLists()
     },
+    // 初始化button状态
+    // initBtnStatus () {
+    //   let currentStep = JSON.parse(window.localStorage.getItem('currentStep'))
+    //   const _EXECUTEQUERY = `SELECT `
+
+    // },
     // 插入sql测试数据
     initSqlDefaultData () {
       const CREATE_ACTIONS_TYPE_TABLE =
@@ -295,15 +299,16 @@ export default {
       const CREATE_RECORDS_TABLE =
         "CREATE TABLE IF NOT EXISTS records (id integer primary key, actionid integer, year varchar(5), month varchar(2), day varchar(2), starttime text, endtime text, odate text, timediff text)"
       let _sqlBatch = []
-      _sqlBatch.push(CREATE_ACTIONS_TABLE, CREATE_RECORDS_TABLE, CREATE_ACTIONS_TYPE_TABLE)
+      _sqlBatch.push(
+        CREATE_ACTIONS_TABLE,
+        CREATE_RECORDS_TABLE,
+        CREATE_ACTIONS_TYPE_TABLE
+      )
       sqlBatch(this.db, _sqlBatch).then(
-        data => {
-          // console.log(data)
+        (data) => {
           console.log("add table success")
-          console.log(this.db)
-          // this.insertTestData()
         },
-        err => {
+        (err) => {
           console.log(err)
         }
       )
@@ -311,43 +316,65 @@ export default {
     insertTestData () {
       // // 插入数据
       sqlBatch(this.db, [
-        ['INSERT INTO actions(name, isstep, steporder) VALUES (?,?,?)', ['step1', '1', '1']],
-        ['INSERT INTO actions(name, isstep, steporder) VALUES (?,?,?)', ['step2', '1', '2']],
-        ['INSERT INTO actions(name, isstep, steporder) VALUES (?,?,?)', ['step3', '1', '3']],
-        ['INSERT INTO actions(name, isstep, steporder) VALUES (?,?,?)', ['step4', '1', '4']]
+        [
+          "INSERT INTO actions(name, isstep, steporder) VALUES (?,?,?)",
+          ["step1", "1", "1"]
+        ],
+        [
+          "INSERT INTO actions(name, isstep, steporder) VALUES (?,?,?)",
+          ["step2", "1", "2"]
+        ],
+        [
+          "INSERT INTO actions(name, isstep, steporder) VALUES (?,?,?)",
+          ["step3", "1", "3"]
+        ],
+        [
+          "INSERT INTO actions(name, isstep, steporder) VALUES (?,?,?)",
+          ["step4", "1", "4"]
+        ]
       ]).then(
-        data => {
+        (data) => {
           console.log("insert success")
         },
-        err => {
-          console.log('insert failure')
+        (err) => {
+          console.log("insert failure")
           console.log(err)
         }
       )
     },
     getStepDatas () {
-      const _sql = 'SELECT * from actiontypes'
-      sqlQuery(this.db, _sql).then(data => {
-        this.steps = data
-        console.log(this.steps)
-      }, err => {
-        console.log(err)
-      })
+      const _sql = "SELECT * from actions WHERE actiontypeid = 1"
+      sqlQuery(this.$store.state.Database.database, _sql).then(
+        (data) => {
+          this.steps = data
+          this.initBtn()
+        },
+        (err) => {
+          console.log(err)
+        }
+      )
     },
     // 添加额外列
     addTableColumn () {
-      console.log('in')
-      extraTableColumn(this.db, 'testtabledata', 'extracolumn text').then(data => { }, err => { console.log(err) })
-      extraTableColumn(this.db, 'testtabledata', 'lplorder text').then(data => { }, err => { console.log(err) })
+      extraTableColumn(this.$store.state.Database.database, "records", "name text").then(
+        (data) => {
+          console.log('add column success')
+        },
+        (err) => {
+          console.log(err)
+        }
+      )
     },
     // 删除数据表
     dropTable () {
-      const _sql = ['DROP TABLE IF EXISTS actions', 'DROP TABLE IF EXISTS records']
+      const _sql = [
+        "DROP TABLE IF EXISTS records"
+      ]
       sqlBatch(this.db, _sql).then(
-        data => {
+        (data) => {
           console.log("删除table成功")
         },
-        err => {
+        (err) => {
           console.log(err)
         }
       )
@@ -377,14 +404,14 @@ export default {
 
 .middle {
   position: fixed;
-  bottom: 200px;
+  bottom: 200PX;
   width: 100%;
   @include font_color("font_color");
   @include background_color("background_color");
 }
 
 .list-wrapper {
-  padding: 12px;
+  padding: 12PX;
 }
 
 .col-align-left {
@@ -400,6 +427,6 @@ export default {
 }
 
 .row-wrapper .van-row {
-  padding: 6px 0;
+  padding: 6PX 0;
 }
 </style>

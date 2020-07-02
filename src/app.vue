@@ -14,6 +14,7 @@ export default {
   created () {
     let _style = window.localStorage.getItem('style') ? window.localStorage.getItem('style') : 'light'
     document.documentElement.setAttribute("data-theme", _style)
+    // 重置首页step disabled的状态
   },
   methods: {
   }
