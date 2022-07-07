@@ -59,7 +59,7 @@
     "@babel/polyfill": "^7.10.1",
     "amfe-flexible": "^2.2.1",
     "lib-flexible": "^0.3.2",
-    "moment": "^2.26.0",
+    "moment": "^2.29.4",
     "postcss-plugin-px2rem": "^0.8.1",
     "vant": "^2.8.5",
     "vue": "^2.6.11",
